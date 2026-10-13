@@ -1587,6 +1587,10 @@
             }
         });
         var overlaysTree = [
+			{label: '<b>VINCOLI WMS SIT PUGLIA</b>', collapsed: false, selectAllCheckbox: true, children: [
+                {label: 'PPTR Approvato (WMS)', layer: layer_WMS_PPTR},
+                {label: 'Aree Protette Natura 2000 (WMS)', layer: layer_WMS_Natura2000},
+            ]},
             {label: '<img src="legend/COMUNE_STERNATIA_19.png" /> COMUNE_STERNATIA', layer: layer_COMUNE_STERNATIA_19},
         {label: '<b>UCP E VINCOLI PPTR</b>', collapsed: true, selectAllCheckbox: true, children: [
             {label: '<img src="legend/Cittconsolidata_18.png" /> Città consolidata', layer: layer_Cittconsolidata_18},
@@ -2139,14 +2143,14 @@ window.addEventListener('load', function() {
                 panel.style.display = 'none';
             };
 
-            var container = document.getElementById('layer-sliders-list');
+          var container = document.getElementById('layer-sliders-list');
             if (container) {
                 container.innerHTML = '';
                 for (var key in window) {
                     if ((key.startsWith('json_') || key.startsWith('layer_') || key.startsWith('lyr_')) && window[key]) {
                         var layerObj = window[key];
                         
-                        if (typeof layerObj.setStyle === 'function') {
+                        if (typeof layerObj.setStyle === 'function' || typeof layerObj.setOpacity === 'function') {
                             var rawName = key.replace(/^(json_|layer_|lyr_)/, '').replace(/_\d+$/, '').replace(/_/g, ' ').trim();
                             var cleanCheck = rawName.toLowerCase();
 
@@ -2167,9 +2171,9 @@ window.addEventListener('load', function() {
                             div.innerHTML = `
                                 <div style="font-size: 11px; color: #333; margin-bottom: 2px; display: flex; justify-content: space-between;">
                                     <strong>${formattedName}</strong>
-                                    <span id="val-${sliderId}" style="color: #666;">70%</span>
-                                </div>
-                                <input type="range" id="${sliderId}" min="0" max="1" step="0.05" value="0.7" style="width: 100%; cursor: pointer;">
+                                    <span id="val-${sliderId}" style="color: #666;">60%</span>
+                                
+                                <input type="range" id="${sliderId}" min="0" max="1" step="0.05" value="0.6" style="width: 100%; cursor: pointer;">
                             `;
                             container.appendChild(div);
 
@@ -2178,19 +2182,22 @@ window.addEventListener('load', function() {
                                     var opacityVal = parseFloat(e.target.value);
                                     document.getElementById('val-' + sId).innerText = Math.round(opacityVal * 100) + '%';
                                     
-                                    layer.setStyle(function(feature) {
-                                        return {
-                                            fillOpacity: opacityVal * 0.7,
-                                            opacity: opacityVal
-                                        };
-                                    });
+                                    if (typeof layer.setStyle === 'function') {
+                                        layer.setStyle(function(feature) {
+                                            return {
+                                                fillOpacity: opacityVal * 0.7,
+                                                opacity: opacityVal
+                                            };
+                                        });
+                                    } else if (typeof layer.setOpacity === 'function') {
+                                        layer.setOpacity(opacityVal);
+                                    }
                                 });
                             })(layerObj, sliderId);
                         }
                     }
                 }
             }
-
             // 2. Pulsante Navigazione Google Maps (in basso a sinistra)
             var navBtn = document.createElement('a');
             navBtn.href = 'https://www.google.com/maps/dir/?api=1&destination=Sternatia,+Lecce,+Italy';
